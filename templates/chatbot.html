@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ title }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles/style.css') }}">
+</head>
+<body>
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="logo">PERTAMINA</div>
+    <ul class="nav-links">
+      <li><a href="/index">Beranda</a></li>
+      <li><a href="/about">Tentang Kami</a></li>
+      <li><a href="/services">Layanan</a></li>
+      <li><a href="/contact">Kontak</a></li>
+      <li><a href="/chatbot" class="active">Chatbot</a></li>
+    </ul>
+  </nav>
+
+  <!-- CHATBOT MAIN -->
+  <main>
+    <div class="msger">
+      <!-- Header -->
+      <div class="msger-header">
+        🤖 Asisten Pertamina
+        <div class="lang-selector">
+          <label for="language-select">Bahasa:</label>
+          <select id="language-select">
+            <option value="id" selected>Indonesia</option>
+            <option value="en">English</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Chat Content -->
+      <div class="msger-chat" id="chat"></div>
+
+      <!-- Input area -->
+      <form class="msger-inputarea" id="chat-form">
+        <input type="text" class="msger-input" id="textInput" placeholder="Tulis pesan Anda..." autocomplete="off" />
+        <button type="submit" class="msger-send-btn">Kirim</button>
+      </form>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer>
+    © 2025 PT Pertamina (Persero). Seluruh hak cipta dilindungi.
+  </footer>
+
+  <!-- JavaScript -->
+  <script>
+    const chat = document.getElementById("chat");
+    const form = document.getElementById("chat-form");
+    const input = document.getElementById("textInput");
+    const langSelect = document.getElementById("language-select");
+
+    // Fungsi untuk menampilkan greeting awal sesuai bahasa
+    function showGreeting(lang) {
+      const time = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      let greetingText = "";
+
+      if (lang === "en") {
+        greetingText = "Hello! I’m Pertamina Assistant. How can I help you today?";
+      } else {
+        greetingText = "Halo! Saya Asisten Pertamina. Ada yang bisa saya bantu hari ini?";
+      }
+
+      const msgHTML = `
+        <div class="msg left-msg">
+          <div class="msg-img" style="background-image: url('https://cdn-icons-png.flaticon.com/512/4712/4712109.png')"></div>
+          <div class="msg-bubble">
+            <div class="msg-info">
+              <div class="msg-info-name">Asisten</div>
+              <div class="msg-info-time">${time}</div>
+            </div>
+            <div class="msg-text">${greetingText}</div>
+          </div>
+        </div>
+      `;
+      chat.innerHTML = msgHTML; // bersihkan & tampilkan greeting
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    // Tampilkan greeting saat halaman pertama dimuat
+    document.addEventListener("DOMContentLoaded", () => {
+      showGreeting(langSelect.value);
+    });
+
+    // Tampilkan greeting baru saat dropdown diubah
+    langSelect.addEventListener("change", () => {
+      showGreeting(langSelect.value);
+    });
+
+    // Proses kirim pesan
+    form.addEventListener("submit", function (e) {
+      e.preventDefault();
+      const userText = input.value.trim();
+      const selectedLang = langSelect.value;
+
+      if (!userText) return;
+
+      appendMessage("Anda", "right-msg", userText);
+      input.value = "";
+
+      fetch(`/get?msg=${encodeURIComponent(userText)}&lang=${selectedLang}`)
+        .then((res) => res.json())
+        .then((data) => {
+          appendMessage("Asisten", "left-msg", data.reply);
+        });
+    });
+
+    function appendMessage(name, side, text) {
+      const msgHTML = `
+        <div class="msg ${side}">
+          <div class="msg-img" style="background-image: url('https://cdn-icons-png.flaticon.com/512/4712/4712109.png')"></div>
+          <div class="msg-bubble">
+            <div class="msg-info">
+              <div class="msg-info-name">${name}</div>
+              <div class="msg-info-time">${new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</div>
+            </div>
+            <div class="msg-text">${text}</div>
+          </div>
+        </div>
+      `;
+      chat.insertAdjacentHTML("beforeend", msgHTML);
+      chat.scrollTop = chat.scrollHeight;
+    }
+  </script>
+</body>
+</html>
